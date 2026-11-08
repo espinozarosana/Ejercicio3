@@ -1,40 +1,52 @@
-# RetailPro – Análisis de ventas (Ventas_Tech_DB)
+# RetailPro – Ejercicio 3: Ventas Tech
 
-Proyecto de análisis de datos (curso de Power BI / DAX / SQL) sobre la base **Ventas_Tech_DB** de **RetailPro**, una empresa minorista de tecnología. Se usan consultas SQL con `JOIN` y `UNION ALL` para explorar las ventas y luego se arma un dashboard en Power BI.
-
-Repositorio: https://github.com/espinozarosana/Ejercicio3.git
+Proyecto de análisis de datos para **RetailPro**, hecho como parte de mi formación en análisis de datos (SQL + Power BI).
+Repositorio: <https://github.com/espinozarosana/Ejercicio3>
 
 ---
 
 ## 1. Descripción del negocio
 
-RetailPro vende productos de tecnología, organizados en categorías, a clientes de distintas ciudades, por dos canales: **Online** y **Presencial**. La gerencia detectó una **caída en las ventas y en la rentabilidad** y necesita entender qué la explica.
+**RetailPro** es un negocio de venta minorista de **productos tecnológicos**: laptops, monitores, periféricos, audio y almacenamiento. Vende a clientes de distintas ciudades de Argentina (Buenos Aires, Córdoba, Rosario, Mendoza y Tucumán).
 
-**Pregunta diagnóstica:**
-> ¿Qué factores están causando la caída de ventas y rentabilidad, y qué categorías o regiones la explican?
+El proyecto organiza la información comercial en una base de datos relacional llamada **`Ventas_Tech_DB`** para poder responder preguntas como:
 
-**KPIs principales:** Total Ventas, Rentabilidad %, Ticket promedio y Crecimiento de ventas %.
+- ¿Cuánto se vendió en total y por período?
+- ¿Qué productos y categorías generan más ingresos?
+- ¿Qué clientes y ciudades compran más?
+- ¿Cuál es el stock disponible de cada producto?
 
-### Modelo de datos (Ventas_Tech_DB)
+Los resultados se pueden luego analizar y visualizar en un dashboard de Power BI.
 
-| Tabla | Campos usados en las consultas |
-|---|---|
-| `ventas` | id_venta, fecha_venta, id_cliente, id_producto, cantidad, precio_unitario, origen |
-| `clientes` | id_cliente, nombre, email, ciudad, fecha_registro |
-| `productos` | id_producto, nombre_producto, precio, id_categoria |
-| `categorias` | id_categoria, nombre_categoria |
+### Modelo de datos
 
-Relaciones: `ventas.id_cliente → clientes`, `ventas.id_producto → productos`, `productos.id_categoria → categorias`.
+La base tiene **4 tablas** relacionadas:
+
+| Tabla | Descripción | Clave primaria | Relaciones |
+|---|---|---|---|
+| `categorias` | Categorías de producto (Computación, Accesorios, Audio, Almacenamiento) | `id_categoria` | – |
+| `clientes` | Datos del cliente: nombre, email, ciudad, fecha de registro | `id_cliente` | – |
+| `productos` | Catálogo con precio, stock y estado (activo) | `id_producto` | `id_categoria` → `categorias` |
+| `ventas` | Cada venta: cliente, producto, cantidad, precio unitario y fecha | `id_venta` | `id_cliente` → `clientes`, `id_producto` → `productos` |
+
+```
+categorias 1 ───< productos 1 ───< ventas >─── 1 clientes
+```
+
+El script carga datos de ejemplo: **4 categorías, 5 clientes, 6 productos y 10 ventas** (marzo de 2024).
 
 ---
 
 ## 2. Herramientas utilizadas
 
-| Herramienta | Uso |
+| Herramienta | Uso en el proyecto |
 |---|---|
-| **MySQL** | Base de datos y consultas SQL |
-| **Power BI** | Modelado, medidas DAX y dashboard |
-| **Excel** | Revisión y limpieza inicial de los datos fuente |
+| **MySQL / PostgreSQL** | Crear la base de datos, las tablas y cargar los datos (`EJ3.sql`) |
+| **Excel** | Revisar y exportar resultados de las consultas |
+| **Power BI** | Modelado, medidas DAX y dashboard de KPIs |
+| **Git / GitHub** | Control de versiones y publicación del proyecto |
+
+> El script usa sintaxis estándar y funciona tanto en **PostgreSQL** como en **MySQL**. Esta guía usa PostgreSQL y agrega la variante para MySQL donde cambia.
 
 ---
 
@@ -42,36 +54,35 @@ Relaciones: `ventas.id_cliente → clientes`, `ventas.id_producto → productos`
 
 ```
 Ejercicio3/
-├── README.md
-├── data/                          # Archivos fuente (CSV / Excel)
-├── sql/
-│   └── m5_consultas_joins.sql     # Consultas JOIN y UNION ALL
-├── powerbi/                       # Informe de Power BI (.pbix)
-└── docs/                          # Brief y boceto del dashboard
+├── README.md     ← este archivo
+└── EJ3.sql       ← script: crea la base, las tablas, inserta datos y valida
 ```
 
-> Ajustá las carpetas a lo que realmente tenga tu repositorio.
+Si más adelante agregás el dashboard o capturas, podés sumar:
+
+```
+├── powerbi/      ← archivo .pbix
+└── docs/         ← capturas y boceto del dashboard
+```
 
 ---
 
-## 4. Contenido del script `m5_consultas_joins.sql`
+## 4. Qué hace el script `EJ3.sql`
 
-| # | Consulta | Técnica | Qué devuelve |
-|---|---|---|---|
-| 1 | Vista de tablas del proyecto | `INNER JOIN` (ventas, clientes, productos, categorias) | Detalle de cada venta con cliente, producto, categoría y total (`cantidad * precio_unitario`) |
-| 2 | Clientes sin ventas | `LEFT JOIN` + `IS NULL` | Clientes que nunca compraron |
-| 3 | Productos sin ventas | `INNER JOIN` + `LEFT JOIN` + `IS NULL` | Productos que nunca se vendieron, con su categoría y precio |
-| 4 | Consolidado por canal | `UNION ALL` + `GROUP BY` | Total de ventas de Online vs. Presencial |
+1. Crea la base de datos `Ventas_Tech_DB`.
+2. Crea las tablas `categorias`, `clientes`, `productos` y `ventas` (con claves primarias, foráneas y restricciones `NOT NULL` / `UNIQUE`).
+3. Inserta los datos de ejemplo, en este orden (importante por las claves foráneas): categorías → clientes → productos → ventas.
+4. Valida la carga con un `SELECT * FROM ...` de cada tabla.
 
 ---
 
-## 5. Guía paso a paso
+## 5. Guía paso a paso para ejecutar el script
 
-### Requisitos
-- MySQL Server 8.x y MySQL Workbench
-- Power BI Desktop (Windows)
-- Excel
-- Git
+### Requisitos previos
+
+- PostgreSQL (13 o superior) con **pgAdmin** o la terminal `psql` — o bien MySQL.
+- Git instalado.
+- (Opcional) Power BI Desktop y Excel.
 
 ### Paso 1 – Clonar el repositorio
 
@@ -80,69 +91,95 @@ git clone https://github.com/espinozarosana/Ejercicio3.git
 cd Ejercicio3
 ```
 
-### Paso 2 – Revisar los datos en Excel
-Abrí los archivos fuente, verificá que no haya filas vacías, fechas mal formateadas o duplicados, y guardalos como **CSV (UTF-8)**.
+### Paso 2 – Crear la base de datos
 
-### Paso 3 – Crear la base y cargar los datos
-1. Abrí MySQL Workbench y conectate a `localhost` (puerto `3306`).
-2. Creá la base y seleccionala:
+El script empieza con `CREATE DATABASE Ventas_Tech_DB;`, pero ese comando **no cambia automáticamente** a la nueva base. Si ejecutás todo de corrido, las tablas pueden quedar en otra base. Por eso conviene crearla primero y ejecutar el script ya conectada a ella.
 
-```sql
-CREATE DATABASE IF NOT EXISTS Ventas_Tech_DB;
-USE Ventas_Tech_DB;
-```
-
-3. Creá las tablas `categorias`, `clientes`, `productos` y `ventas` y cargá los datos (con `LOAD DATA INFILE` o con *Table Data Import Wizard*).
-
-### Paso 4 – Verificar la carga
+**PostgreSQL** (desde `psql`):
 
 ```sql
-SELECT COUNT(*) FROM clientes;
-SELECT COUNT(*) FROM productos;
-SELECT COUNT(*) FROM categorias;
-SELECT COUNT(*) FROM ventas;
+CREATE DATABASE ventas_tech_db;
 ```
 
-Si alguna tabla devuelve `0`, revisá la ruta o el formato del CSV.
+**MySQL:**
 
-### Paso 5 – Ejecutar las consultas
-En Workbench: `File > Open SQL Script`, elegí `sql/m5_consultas_joins.sql` y ejecutá cada consulta por separado (seleccioná el bloque y presioná ⚡), o por consola:
+```sql
+CREATE DATABASE Ventas_Tech_DB;
+```
+
+> Después, en `EJ3.sql`, poné `--` delante de la primera línea (`-- CREATE DATABASE Ventas_Tech_DB;`) para que no dé error de "ya existe".
+
+### Paso 3 – Ejecutar `EJ3.sql`
+
+**PostgreSQL – terminal:**
 
 ```bash
-mysql -u root -p Ventas_Tech_DB < sql/m5_consultas_joins.sql
+psql -U postgres -d ventas_tech_db -f EJ3.sql
 ```
 
-### Paso 6 – Conectar Power BI
-1. `Obtener datos > Base de datos MySQL`.
-2. Servidor: `localhost` · Base de datos: `Ventas_Tech_DB`.
-3. Seleccioná las 4 tablas y hacé clic en **Cargar**.
-4. En la vista **Modelo**, verificá las relaciones descriptas arriba y creá las medidas DAX de los KPIs.
+**PostgreSQL – pgAdmin:**
 
-> Si no tenés el conector de MySQL instalado, exportá las tablas a CSV y cargalas con `Obtener datos > Texto/CSV`.
+1. Conectate a la base `ventas_tech_db`.
+2. Abrí *Query Tool* → abrí el archivo `EJ3.sql`.
+3. Presioná **F5** para ejecutarlo.
 
-### Si usás PostgreSQL
+**MySQL – terminal:**
 
-| MySQL | PostgreSQL |
+```bash
+mysql -u root -p Ventas_Tech_DB < EJ3.sql
+```
+
+### Paso 4 – Verificar que todo se cargó
+
+El final del script ya muestra el contenido de las 4 tablas. También podés comprobar:
+
+```sql
+SELECT COUNT(*) FROM ventas;          -- debería dar 10
+SELECT COUNT(*) FROM productos;       -- debería dar 6
+```
+
+### Paso 5 – Probar una consulta de análisis
+
+Ventas totales por producto:
+
+```sql
+SELECT p.nombre_producto,
+       SUM(v.cantidad)                   AS unidades_vendidas,
+       SUM(v.cantidad * v.precio_unitario) AS ingreso_total
+FROM ventas v
+JOIN productos p ON p.id_producto = v.id_producto
+GROUP BY p.nombre_producto
+ORDER BY ingreso_total DESC;
+```
+
+Ingreso total de todas las ventas (con los datos de ejemplo da **6444.00**):
+
+```sql
+SELECT SUM(cantidad * precio_unitario) AS ingreso_total FROM ventas;
+```
+
+### Paso 6 – Conectar con Power BI (opcional)
+
+1. En Power BI Desktop: *Obtener datos* → *Base de datos PostgreSQL* (o *MySQL*).
+2. Servidor: `localhost` · Base de datos: `ventas_tech_db`.
+3. Seleccioná las 4 tablas y cargalas.
+4. Revisá las relaciones en la vista *Modelo* y creá medidas DAX (ventas totales, ticket promedio, etc.).
+
+---
+
+## 6. Problemas frecuentes
+
+| Problema | Posible solución |
 |---|---|
-| `AUTO_INCREMENT` | `SERIAL` / `GENERATED ALWAYS AS IDENTITY` |
-| `LOAD DATA INFILE` | `\copy tabla FROM 'archivo.csv' CSV HEADER` |
-| `` `nombre` `` | `"nombre"` |
-| `USE Ventas_Tech_DB;` | `\c ventas_tech_db` |
-
-Las consultas de `m5_consultas_joins.sql` usan SQL estándar y funcionan igual en ambos motores.
-
----
-
-## 6. Dashboard
-
-Layout en Z con filtros (fecha, región, categoría, producto, segmento de cliente), 4 KPIs, gráficos de tendencia, ventas por región y por categoría, y una tabla de detalle por producto.
-
-*(Agregá acá las capturas del dashboard.)*
+| `database "Ventas_Tech_DB" already exists` | Ya la creaste en el Paso 2: comentá la primera línea del script. |
+| `No database selected` (MySQL) | Ejecutá con el nombre de la base: `mysql -u root -p Ventas_Tech_DB < EJ3.sql`, o agregá `USE Ventas_Tech_DB;`. |
+| `relation "categorias" already exists` | Ya corriste el script antes. Borrá las tablas (o la base) y ejecutalo de nuevo. |
+| Error de clave foránea al insertar | Respetá el orden: categorías → clientes → productos → ventas. |
+| Tildes o ñ mal mostradas | Guardá `EJ3.sql` con codificación **UTF-8**. |
 
 ---
 
-## 7. Autor
+## 7. Autora
 
-Proyecto realizado como práctica del curso de Análisis de Datos con Power BI.
-
-- GitHub: [@espinozarosana](https://github.com/espinozarosana)
+**Rosana Espinoza** – Estudiante de análisis de datos.
+GitHub: [@espinozarosana](https://github.com/espinozarosana)
