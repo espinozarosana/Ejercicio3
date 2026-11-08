@@ -1,4 +1,4 @@
-# RetailPro – Ejercicio 3: Ventas Tech
+# RetailPro – Ejercicio 9: Ventas Tech
 
 Proyecto de análisis de datos para **RetailPro**, hecho como parte de mi formación en análisis de datos (SQL + Power BI).
 Repositorio: <https://github.com/espinozarosana/Ejercicio3>
